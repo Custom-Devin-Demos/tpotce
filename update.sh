@@ -192,6 +192,53 @@ function fuRESTORE () {
 	# We should upgrade the version in this file after restoring the backup.
 	newVERSION=$(cat version)
 	sed -i "s/^TPOT_VERSION=.*/TPOT_VERSION=${newVERSION}/" $HOME/tpotce/.env
+	
+	myTPOT_TYPE=$(grep "^TPOT_TYPE=" $HOME/tpotce/.env | cut -d= -f2)
+	
+	myCurrentType=""
+	if [ -f "$HOME/tpotce/docker-compose.yml" ]; then
+		myCurrentType=$(head -n1 $HOME/tpotce/docker-compose.yml | sed 's/# T-Pot: //')
+	fi
+	
+	echo "### Detected deployment type: $myTPOT_TYPE"
+	if [ "$myCurrentType" != "" ]; then
+		echo "### Current compose file type: $myCurrentType"
+	fi
+	
+	case "$myCurrentType" in
+		"LLM")
+			echo "### Restoring LLM deployment configuration"
+			cp $HOME/tpotce/compose/llm.yml $HOME/tpotce/docker-compose.yml
+			;;
+		"MINI")
+			echo "### Restoring MINI deployment configuration"
+			cp $HOME/tpotce/compose/mini.yml $HOME/tpotce/docker-compose.yml
+			;;
+		"TARPIT")
+			echo "### Restoring TARPIT deployment configuration"
+			cp $HOME/tpotce/compose/tarpit.yml $HOME/tpotce/docker-compose.yml
+			;;
+		"MOBILE")
+			echo "### Restoring MOBILE deployment configuration"
+			cp $HOME/tpotce/compose/mobile.yml $HOME/tpotce/docker-compose.yml
+			;;
+		*)
+			case "$myTPOT_TYPE" in
+				"HIVE")
+					echo "### Restoring HIVE deployment configuration"
+					cp $HOME/tpotce/compose/standard.yml $HOME/tpotce/docker-compose.yml
+					;;
+				"SENSOR")
+					echo "### Restoring SENSOR deployment configuration"
+					cp $HOME/tpotce/compose/sensor.yml $HOME/tpotce/docker-compose.yml
+					;;
+				*)
+					echo "### Warning: Unknown deployment type: $myTPOT_TYPE. Using standard configuration."
+					cp $HOME/tpotce/compose/standard.yml $HOME/tpotce/docker-compose.yml
+					;;
+			esac
+			;;
+	esac
 }
 
 ################
